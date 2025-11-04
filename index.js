@@ -2,7 +2,11 @@ const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 const app = express();
+const cors = require("cors");
 
+
+app.use(express.json());
+app.use(cors());
 const PORT = 3000;
 
 
@@ -37,6 +41,51 @@ app.get('/products', async (req, res) => {
   try {
     const result = await products.find().toArray();
     res.status(200).json({ status: 'ok', data: result });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ status: 'error', message: 'Server problem' });
+  }
+});
+
+//Cart Related api
+
+const cartsCollection = PuratonBazar.collection('carts');
+
+app.post('/cart', async (req, res) => {
+  try {
+
+    const cart=req.body;
+
+    const result= await cartsCollection.insertOne(cart);
+
+
+    if(result){
+
+      res.status(200).json({ status: 'ok', data: result });
+
+    }
+
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ status: 'error', message: 'Server problem' });
+  }
+});
+
+
+app.get('/cart/:email', async (req, res) => {
+  try {
+
+    const email=req.params.email;
+
+    const result= await cartsCollection.find().toArray();
+
+
+    if(result){
+
+      res.status(200).json({ status: 'ok', data: result });
+
+    }
+
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ status: 'error', message: 'Server problem' });
