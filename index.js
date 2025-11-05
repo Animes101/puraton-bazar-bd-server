@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const cors = require("cors");
@@ -47,6 +47,33 @@ app.get('/products', async (req, res) => {
   }
 });
 
+app.get('/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ObjectId valid কিনা চেক করা
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ status: 'error', message: 'Invalid product ID' });
+    }
+
+    const query = { _id: new ObjectId(id) };
+
+    // findOne() already returns a single document
+    const result = await products.findOne(query);
+
+
+    if (!result) {
+      return res.status(404).json({ status: 'error', message: 'Product not found' });
+    }
+
+    res.status(200).json({ status: 'ok', data: result });
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ status: 'error', message: 'Server problem' });
+  }
+});
+
+
 //Cart Related api
 
 const cartsCollection = PuratonBazar.collection('carts');
@@ -72,10 +99,10 @@ app.post('/cart', async (req, res) => {
 });
 
 
-app.get('/cart/:email', async (req, res) => {
+app.get('/cart', async (req, res) => {
   try {
 
-    const email=req.params.email;
+    // const email=req.params.email;
 
     const result= await cartsCollection.find().toArray();
 
