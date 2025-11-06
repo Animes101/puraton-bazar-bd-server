@@ -102,9 +102,11 @@ app.post('/cart', async (req, res) => {
 app.get('/cart', async (req, res) => {
   try {
 
-    // const email=req.params.email;
+    const email=req.query.email;
 
-    const result= await cartsCollection.find().toArray();
+    const query={email:email}
+
+    const result= await cartsCollection.find(query).toArray();
 
 
     if(result){
