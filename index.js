@@ -126,6 +126,39 @@ async function run() {
       }
     });
 
+    //Users related api 
+    const usersCollection = PuratonBazar.collection("users");
+
+    app.post("/users", async (req, res)=>{
+       try {
+        const  userInfo= req.body;
+
+        const quey={email:userInfo.email};
+
+
+        const existingUser=await usersCollection.findOne(quey);
+
+
+        if(existingUser){
+          return res.status(200).json({status:"ok", data:"User already exists"});
+          
+        }
+
+        const result = await usersCollection.insertOne(userInfo);
+
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+
+      
+
+
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
