@@ -191,6 +191,27 @@ async function run() {
 
     })
 
+      app.patch("/users/:id", async (req, res)=>{
+       try {
+        const {id}=req.params;
+        const query={_id:new ObjectId(id)};
+
+        const updateDoc={
+          $set:{role:"admin"}
+        }
+
+        const result=await usersCollection.updateOne(query, updateDoc);
+
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
