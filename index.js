@@ -140,8 +140,8 @@ async function run() {
 
 
         if(existingUser){
-          return res.status(200).json({status:"ok", data:"User already exists"});
-          
+          return res.status(200).json({status:"no", data:"User already exists"});
+
         }
 
         const result = await usersCollection.insertOne(userInfo);
@@ -156,6 +156,38 @@ async function run() {
 
       
 
+
+    })
+
+    app.get("/users", async (req, res)=>{
+       try {
+    
+        const result=await usersCollection.find().toArray();
+
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+
+    });
+
+        app.delete("/users/:id", async (req, res)=>{
+       try {
+        const {id}=req.params;
+        const query={_id:new ObjectId(id)};
+
+        const result=await usersCollection.deleteOne(query);
+
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
 
     })
 
