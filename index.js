@@ -1,18 +1,15 @@
-const express = require('express');
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config();
+const express = require("express");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+require("dotenv").config();
 const app = express();
 const cors = require("cors");
-
 
 app.use(express.json());
 app.use(cors());
 const PORT = 3000;
 
-
-app.get('/', (req, res) => {
- 
-  res.send('Hello from Express Server!................');
+app.get("/", (req, res) => {
+  res.send("Hello from Express Server!................");
 });
 
 const uri = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@cluster0.26qzwj8.mongodb.net/?appName=Cluster0`;
@@ -23,10 +20,8 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
-
-
 
 async function run() {
   try {
@@ -34,105 +29,114 @@ async function run() {
     await client.connect();
     //products relate api
 
-   const PuratonBazar = client.db('PuratonBazar');
-const products = PuratonBazar.collection('products');
+    const PuratonBazar = client.db("PuratonBazar");
+    const products = PuratonBazar.collection("products");
 
-app.get('/products', async (req, res) => {
-  try {
-    const result = await products.find().toArray();
-    res.status(200).json({ status: 'ok', data: result });
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ status: 'error', message: 'Server problem' });
-  }
-});
+    app.get("/products", async (req, res) => {
+      try {
+        const result = await products.find().toArray();
+        res.status(200).json({ status: "ok", data: result });
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
 
-app.get('/products/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
+    app.get("/products/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
 
-    // ObjectId valid কিনা চেক করা
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ status: 'error', message: 'Invalid product ID' });
-    }
+        // ObjectId valid কিনা চেক করা
+        if (!ObjectId.isValid(id)) {
+          return res
+            .status(400)
+            .json({ status: "error", message: "Invalid product ID" });
+        }
 
-    const query = { _id: new ObjectId(id) };
+        const query = { _id: new ObjectId(id) };
 
-    // findOne() already returns a single document
-    const result = await products.findOne(query);
+        // findOne() already returns a single document
+        const result = await products.findOne(query);
 
+        if (!result) {
+          return res
+            .status(404)
+            .json({ status: "error", message: "Product not found" });
+        }
 
-    if (!result) {
-      return res.status(404).json({ status: 'error', message: 'Product not found' });
-    }
+        res.status(200).json({ status: "ok", data: result });
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
 
-    res.status(200).json({ status: 'ok', data: result });
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    res.status(500).json({ status: 'error', message: 'Server problem' });
-  }
-});
+    //Cart Related api
 
+    const cartsCollection = PuratonBazar.collection("carts");
 
-//Cart Related api
+    app.post("/cart", async (req, res) => {
+      try {
+        const cart = req.body;
 
-const cartsCollection = PuratonBazar.collection('carts');
+        const result = await cartsCollection.insertOne(cart);
 
-app.post('/cart', async (req, res) => {
-  try {
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
 
-    const cart=req.body;
+    app.get("/cart", async (req, res) => {
+      try {
+        const email = req.query.email;
 
-    const result= await cartsCollection.insertOne(cart);
+        const query = { email: email };
 
+        const result = await cartsCollection.find(query).toArray();
 
-    if(result){
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
 
-      res.status(200).json({ status: 'ok', data: result });
+      app.delete("/cart/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
 
-    }
+        console.log(id)
 
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ status: 'error', message: 'Server problem' });
-  }
-});
+        const query = { _id: new ObjectId(id) };
 
+        const result = await cartsCollection.deleteOne(query);
 
-app.get('/cart', async (req, res) => {
-  try {
-
-    const email=req.query.email;
-
-    const query={email:email}
-
-    const result= await cartsCollection.find(query).toArray();
-
-
-    if(result){
-
-      res.status(200).json({ status: 'ok', data: result });
-
-    }
-
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ status: 'error', message: 'Server problem' });
-  }
-});
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
 }
 run().catch(console.dir);
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
