@@ -3,6 +3,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
 app.use(cors());
@@ -27,6 +28,32 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    //jwt related api
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(
+       user,
+        process.env.SECRITE_TOKEN,
+        { expiresIn: "1h" }
+      );
+
+      res.json({token: token});
+    });
+
+    //middleware for verify jwt
+    const verifyToken=(req,res,next)=>{
+
+      const authorization=req.headers.authorization;
+
+      if(!authorization){
+        return res.status(401).send({error:true, message:'unauthorized access'})
+      }
+      const token=authorization.split(' ')[1];
+      console.log(token)
+
+      next()
+    }
     //products relate api
 
     const PuratonBazar = client.db("PuratonBazar");
@@ -107,11 +134,11 @@ async function run() {
       }
     });
 
-      app.delete("/cart/:id", async (req, res) => {
+    app.delete("/cart/:id", async (req, res) => {
       try {
         const { id } = req.params;
 
-        console.log(id)
+        console.log(id);
 
         const query = { _id: new ObjectId(id) };
 
@@ -126,22 +153,20 @@ async function run() {
       }
     });
 
-    //Users related api 
+    //Users related api
     const usersCollection = PuratonBazar.collection("users");
+    app.post("/users", async  (req, res) => {
+      try {
+        const userInfo = req.body;
 
-    app.post("/users", async (req, res)=>{
-       try {
-        const  userInfo= req.body;
+        const quey = { email: userInfo.email };
 
-        const quey={email:userInfo.email};
+        const existingUser = await usersCollection.findOne(quey);
 
-
-        const existingUser=await usersCollection.findOne(quey);
-
-
-        if(existingUser){
-          return res.status(200).json({status:"no", data:"User already exists"});
-
+        if (existingUser) {
+          return res
+            .status(200)
+            .json({ status: "no", data: "User already exists" });
         }
 
         const result = await usersCollection.insertOne(userInfo);
@@ -153,54 +178,14 @@ async function run() {
         console.error("Error fetching products:", error);
         res.status(500).json({ status: "error", message: "Server problem" });
       }
-
-      
-
-
-    })
-
-    app.get("/users", async (req, res)=>{
-       try {
-    
-        const result=await usersCollection.find().toArray();
-
-        if (result) {
-          res.status(200).json({ status: "ok", data: result });
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        res.status(500).json({ status: "error", message: "Server problem" });
-      }
-
     });
 
-        app.delete("/users/:id", async (req, res)=>{
-       try {
-        const {id}=req.params;
-        const query={_id:new ObjectId(id)};
+    app.get("/users", verifyToken, async (req, res) => {
+      try {
+      
 
-        const result=await usersCollection.deleteOne(query);
-
-        if (result) {
-          res.status(200).json({ status: "ok", data: result });
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        res.status(500).json({ status: "error", message: "Server problem" });
-      }
-
-    })
-
-      app.patch("/users/:id", async (req, res)=>{
-       try {
-        const {id}=req.params;
-        const query={_id:new ObjectId(id)};
-
-        const updateDoc={
-          $set:{role:"admin"}
-        }
-
-        const result=await usersCollection.updateOne(query, updateDoc);
+       
+        const result = await usersCollection.find().toArray();
 
         if (result) {
           res.status(200).json({ status: "ok", data: result });
@@ -209,8 +194,43 @@ async function run() {
         console.error("Error fetching products:", error);
         res.status(500).json({ status: "error", message: "Server problem" });
       }
+    });
 
-    })
+    app.delete("/users/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const query = { _id: new ObjectId(id) };
+
+        const result = await usersCollection.deleteOne(query);
+
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
+
+    app.patch("/users/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const query = { _id: new ObjectId(id) };
+
+        const updateDoc = {
+          $set: { role: "admin" },
+        };
+
+        const result = await usersCollection.updateOne(query, updateDoc);
+
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
