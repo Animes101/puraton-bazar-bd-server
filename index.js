@@ -50,9 +50,18 @@ async function run() {
         return res.status(401).send({error:true, message:'unauthorized access'})
       }
       const token=authorization.split(' ')[1];
-      console.log(token)
 
-      next()
+                // verify a token symmetric
+          jwt.verify(token, process.env.SECRITE_TOKEN, (err, decoded) =>{
+            
+            
+            if(err){
+              return res.status(401).send({error:true, message:'unauthorized access'})
+            }
+            req.decoded=decoded;
+            next()
+
+          });
     }
     //products relate api
 
@@ -173,6 +182,26 @@ async function run() {
 
         if (result) {
           res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
+
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      try {
+        const { email } = req.params;
+
+        if(email !== req.decoded.email){
+          return res.status(403).json({status:'forbidden access'})
+        }
+        const query = { email: email };
+        const user = await usersCollection.findOne(query);
+        if (user?.role === "admin") {
+          return res.status(200).json({ status: "ok", isAdmin: true });
+        } else {
+          return res.status(200).json({ status: "ok", isAdmin: false });
         }
       } catch (error) {
         console.error("Error fetching products:", error);
