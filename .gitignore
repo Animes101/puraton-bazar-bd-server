@@ -1,0 +1,18 @@
+# Node modules ফোল্ডার
+node_modules/
+
+# Environment ফাইল (গোপন তথ্য)
+.env
+.env.local
+
+# লগ ফাইল
+*.log
+
+# Build output
+dist/
+build/
+
+# IDE বা Editor ফোল্ডার
+.vscode/
+.idea/
+.DS_Store
