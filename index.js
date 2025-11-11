@@ -62,13 +62,33 @@ async function run() {
             next()
 
           });
+
+    }
+
+
+
+
+      //middleware for verify Admin
+    const verifyAdmin= async (req, res, next)=> {
+
+
+      const email=req.decoded.email; 
+
+      const query={email:email}
+
+      const user=await usersCollection.findOne(query);
+      if(user?.role !== 'admin'){
+        return res.status(403).send({error:true, message:'forbidden access'})
+      }
+
+      next();
     }
     //products relate api
 
     const PuratonBazar = client.db("PuratonBazar");
     const products = PuratonBazar.collection("products");
 
-    app.get("/products", async (req, res) => {
+    app.get("/products", verifyToken, verifyAdmin, async (req, res) => {
       try {
         const result = await products.find().toArray();
         res.status(200).json({ status: "ok", data: result });
@@ -209,7 +229,7 @@ async function run() {
       }
     });
 
-    app.get("/users", verifyToken, async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       try {
       
 
