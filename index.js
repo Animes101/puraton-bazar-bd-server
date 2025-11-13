@@ -65,9 +65,6 @@ async function run() {
 
     }
 
-
-
-
       //middleware for verify Admin
     const verifyAdmin= async (req, res, next)=> {
 
@@ -83,12 +80,13 @@ async function run() {
 
       next();
     }
+
     //products relate api
 
     const PuratonBazar = client.db("PuratonBazar");
     const products = PuratonBazar.collection("products");
 
-    app.get("/products", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/products", verifyToken , async (req, res) => {
       try {
         const result = await products.find().toArray();
         res.status(200).json({ status: "ok", data: result });
@@ -121,6 +119,25 @@ async function run() {
         }
 
         res.status(200).json({ status: "ok", data: result });
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
+
+     app.post("/products", verifyToken, verifyAdmin, async (req, res) => {
+      try {
+        const newItem = req.body;
+
+        const result= await products.insertOne(newItem);
+
+        if(result.insertedId){
+
+          res.status(200).json({ status: "ok", data: result })
+        }
+
+        
+
       } catch (error) {
         console.error("Error fetching product:", error);
         res.status(500).json({ status: "error", message: "Server problem" });
