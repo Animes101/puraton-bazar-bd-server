@@ -144,6 +144,44 @@ async function run() {
       }
     });
 
+     app.patch("/Products/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const newItem=req.body;
+
+        const query={_id: new ObjectId(id)}
+
+
+       
+        
+
+        const updateDoc = {
+          $set: { 
+           
+            category: newItem.category,
+            name: newItem.name,
+            brand: newItem.brand,
+            price: newItem.price,
+            condition: newItem.condition,
+            description: newItem.description,
+            images: [newItem?.images?.[0] || null, newItem?.images?.[1] || null],
+            postedAt: newItem.postedAt,
+       
+          },
+        };
+
+        const result = await products.updateOne(query, updateDoc);
+        
+        if (result) {
+          res.status(200).json({ status: "ok", data: result });
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
+
     //Cart Related api
 
     const cartsCollection = PuratonBazar.collection("carts");
