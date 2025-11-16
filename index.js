@@ -4,10 +4,17 @@ require("dotenv").config();
 const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const SSLCommerzPayment = require('sslcommerz-lts')
 
 app.use(express.json());
 app.use(cors());
 const PORT = 3000;
+
+const store_id = 'midla68ef5f2b0cf63';
+const store_passwd = 'midla68ef5f2b0cf63@ssl';
+
+
+const is_live = false; 
 
 app.get("/", (req, res) => {
   res.send("Hello from Express Server!................");
@@ -113,7 +120,7 @@ async function run() {
         const query={_id:new ObjectId(id)}
 
         const result = await products.deleteOne(query);
-        
+
         res.status(200).json({ status: "ok", data: result });
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -360,6 +367,83 @@ async function run() {
         res.status(500).json({ status: "error", message: "Server problem" });
       }
     });
+
+    //payment getWay api 
+
+
+app.post("/order", async (req, res) => {
+  try {
+    const order = req.body;
+
+    console.log(order)
+
+
+   // Create unique transaction ID
+    const tran_id = "TXN_" + Date.now();
+
+    const data = {
+      total_amount: order.price, // from client
+      currency: "BDT",
+      tran_id: tran_id,
+      success_url: "http://localhost:3030/success",
+      fail_url: "http://localhost:3030/fail",
+      cancel_url: "http://localhost:3030/cancel",
+      ipn_url: "http://localhost:3030/ipn",
+
+      // Customer Info
+      cus_name: order.name,
+      cus_email:order.email ,
+      cus_add1:order.address ,
+      cus_add2: order.address,
+      cus_city: "Dhaka",
+      cus_state: "Dhaka",
+      cus_postcode: "1000",
+      cus_country: "Bangladesh",
+      cus_phone: "01700000000",
+      cus_fax: "01700000000",
+
+      // Shipping Info
+      shipping_method: "Courier",
+      ship_name: order.name,
+      ship_add1: order.address,
+      ship_add2: order.address,
+      ship_city: "Dhaka",
+      ship_state: "Dhaka",
+      ship_postcode: 1000,
+      ship_country: "Bangladesh",
+
+      // Product Info
+      product_name: "Order Items",
+      product_category: "Mixed",
+      product_profile: "general",
+    };
+    
+
+   // Initialize SSLCommerz
+    const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+    sslcz.init(data).then((apiResponse) => {
+
+      console.log("SSLCommerz Response:", apiResponse);
+
+      if (apiResponse?.GatewayPageURL) {
+        return res.send({
+          url: apiResponse.GatewayPageURL,
+        });
+      } else {
+        return res.status(400).send({
+          message: "Payment session failed!",
+        });
+      }
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ error: err.message });
+  }
+});
+
+app.listen(3000, () => console.log("Server running on port 3000"));
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
