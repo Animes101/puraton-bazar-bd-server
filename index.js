@@ -47,6 +47,7 @@ async function run() {
       const authorization=req.headers.authorization;
 
       if(!authorization){
+        
         return res.status(401).send({error:true, message:'unauthorized access'})
       }
       const token=authorization.split(' ')[1];
@@ -64,6 +65,17 @@ async function run() {
           });
 
     }
+
+
+
+
+
+
+
+
+
+
+
 
       //middleware for verify Admin
     const verifyAdmin= async (req, res, next)=> {
@@ -89,6 +101,19 @@ async function run() {
     app.get("/products", verifyToken , async (req, res) => {
       try {
         const result = await products.find().toArray();
+        res.status(200).json({ status: "ok", data: result });
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        res.status(500).json({ status: "error", message: "Server problem" });
+      }
+    });
+     app.delete("/products/:id", verifyToken, verifyAdmin , async (req, res) => {
+      try {
+        const {id}=req.params;
+        const query={_id:new ObjectId(id)}
+
+        const result = await products.deleteOne(query);
+        
         res.status(200).json({ status: "ok", data: result });
       } catch (error) {
         console.error("Error fetching products:", error);
