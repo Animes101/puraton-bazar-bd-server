@@ -12,13 +12,11 @@ const PORT = 3000;
 
 const store_id = 'midla68ef5f2b0cf63';
 const store_passwd = 'midla68ef5f2b0cf63@ssl';
-
-
 const is_live = false; 
 
-app.get("/", (req, res) => {
-  res.send("Hello from Express Server!................");
-});
+// app.get("/", (req, res) => {
+//   res.send("Hello from Express Server!................");
+// });
 
 const uri = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@cluster0.26qzwj8.mongodb.net/?appName=Cluster0`;
 
@@ -375,8 +373,6 @@ app.post("/order", async (req, res) => {
   try {
     const order = req.body;
 
-    console.log(order)
-
 
    // Create unique transaction ID
     const tran_id = "TXN_" + Date.now();
@@ -385,8 +381,8 @@ app.post("/order", async (req, res) => {
       total_amount: order.price, // from client
       currency: "BDT",
       tran_id: tran_id,
-      success_url: "http://localhost:3030/success",
-      fail_url: "http://localhost:3030/fail",
+      success_url: `http://localhost:3000/success/${tran_id}`,
+      fail_url: "http://localhost:3000/fail",
       cancel_url: "http://localhost:3030/cancel",
       ipn_url: "http://localhost:3030/ipn",
 
@@ -423,7 +419,6 @@ app.post("/order", async (req, res) => {
     const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
     sslcz.init(data).then((apiResponse) => {
 
-      console.log("SSLCommerz Response:", apiResponse);
 
       if (apiResponse?.GatewayPageURL) {
         return res.send({
@@ -435,6 +430,16 @@ app.post("/order", async (req, res) => {
         });
       }
     });
+
+
+    app.post('/success/:tran_id', async (req, res)=>{
+      
+
+      console.log(req.params.tran_id);
+
+
+
+    })
 
   } catch (err) {
     console.log(err);
