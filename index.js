@@ -101,7 +101,7 @@ async function run() {
     //products relate api
 
     const PuratonBazar = client.db("PuratonBazar");
-    const products = PuratonBazar.collection("products");
+    const products = PuratonBazar.collection("    ");
 
     app.get("/products", verifyToken , async (req, res) => {
       try {
@@ -378,7 +378,7 @@ async function run() {
           const tran_id = "TXN_" + Date.now();
 
           const data = {
-            total_amount: order.price, // from client
+            total_amount: Number(order.price), // from client
             currency: "BDT",
             tran_id: tran_id,
             success_url: `http://localhost:3000/success/${tran_id}`,
@@ -503,20 +503,59 @@ app.get('/paymentHistory/:email', async( req, res)=>{
   }
 
 
-  
-
-
-
-
-
-
 })
+
+app.get('/state', async (req, res) => {
+  const users = await usersCollection.estimatedDocumentCount();
+  const order = await paymentCollection.estimatedDocumentCount();
+  const allProduct = await products.estimatedDocumentCount();
+
+  // Aggregate must use await!
+  const result = await paymentCollection.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalRevenue: { $sum: "$price" }
+      }
+    }
+  ]).toArray();
+
+  const revenue = result.length > 0 ? result[0].totalRevenue : 0;
+
+  res.send({
+    users,
+    order,
+    allProduct,
+    revenue
+  });
+});
+
+app.get('/orderState', async (req, res) => {
+
+  const result = await paymentCollection.aggregate([
+
+    { $unwind: '$id' },
+
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'id',
+        foreignField: '_id',
+        as: 'menuItems'
+      }
+    }
+
+  ]).toArray();
+
+  res.send(result);
+
+});
+
+
 
 
 
 app.listen(3000, () => console.log("Server running on port 3000"));
-
-
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
