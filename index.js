@@ -368,84 +368,151 @@ async function run() {
 
     //payment getWay api 
 
+    const paymentCollection=PuratonBazar.collection('payment')
 
-app.post("/order", async (req, res) => {
-  try {
-    const order = req.body;
+      app.post("/order", async (req, res) => {
+        try {
+          const order = req.body;
+
+        // Create unique transaction ID
+          const tran_id = "TXN_" + Date.now();
+
+          const data = {
+            total_amount: order.price, // from client
+            currency: "BDT",
+            tran_id: tran_id,
+            success_url: `http://localhost:3000/success/${tran_id}`,
+            fail_url:`http://localhost:3000/fail/${tran_id}` ,
+            cancel_url: "http://localhost:3030/cancel",
+            ipn_url: "http://localhost:3030/ipn",
+
+            // Customer Info
+            cus_name: order.name,
+            cus_email:order.email ,
+            cus_add1:order.address ,
+            cus_add2: order.address,
+            cus_city: "Dhaka",
+            cus_state: "Dhaka",
+            cus_postcode: "1000",
+            cus_country: "Bangladesh",
+            cus_phone: "01700000000",
+            cus_fax: "01700000000",
+
+            // Shipping Info
+            shipping_method: "Courier",
+            ship_name: order.name,
+            ship_add1: order.address,
+            ship_add2: order.address,
+            ship_city: "Dhaka",
+            ship_state: "Dhaka",
+            ship_postcode: 1000,
+            ship_country: "Bangladesh",
+
+            // Product Info
+            product_name: "Order Items",
+            product_category: "Mixed",
+            product_profile: "general",
+          };
+          
+
+        // Initialize SSLCommerz
+          const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+          sslcz.init(data).then(async (apiResponse) => {
 
 
-   // Create unique transaction ID
-    const tran_id = "TXN_" + Date.now();
+            if (apiResponse?.GatewayPageURL) {
+                res.send({
+                url: apiResponse.GatewayPageURL,
+              });
 
-    const data = {
-      total_amount: order.price, // from client
-      currency: "BDT",
-      tran_id: tran_id,
-      success_url: `http://localhost:3000/success/${tran_id}`,
-      fail_url: "http://localhost:3000/fail",
-      cancel_url: "http://localhost:3030/cancel",
-      ipn_url: "http://localhost:3030/ipn",
+              const finalOrder={
+               ... order,
+                tran_id,
+                successStatus:false
+              }
 
-      // Customer Info
-      cus_name: order.name,
-      cus_email:order.email ,
-      cus_add1:order.address ,
-      cus_add2: order.address,
-      cus_city: "Dhaka",
-      cus_state: "Dhaka",
-      cus_postcode: "1000",
-      cus_country: "Bangladesh",
-      cus_phone: "01700000000",
-      cus_fax: "01700000000",
+              await paymentCollection.insertOne(finalOrder);
 
-      // Shipping Info
-      shipping_method: "Courier",
-      ship_name: order.name,
-      ship_add1: order.address,
-      ship_add2: order.address,
-      ship_city: "Dhaka",
-      ship_state: "Dhaka",
-      ship_postcode: 1000,
-      ship_country: "Bangladesh",
+              const deleteQuery = {
+          _id: { $in: order.id.map((id) => new ObjectId(id)) },
+        };
 
-      // Product Info
-      product_name: "Order Items",
-      product_category: "Mixed",
-      product_profile: "general",
-    };
+        await cartsCollection.deleteMany(deleteQuery);
+
+
+
+            } else {
+              return res.status(400).send({
+                message: "Payment session failed!",
+              });
+            }
+          });
+
+
+
+        } catch (err) {
+          console.log(err);
+          res.status(500).send({ error: err.message });
+        }
+      });
+
+app.post("/success/:tran_id", async (req, res) => {
+  const tranId = req.params.tran_id;
+
+  console.log("Payment Success:", tranId);
+
+  await paymentCollection.updateOne(
+    { tran_id: tranId },
+    { $set: { PaidStatus: true } }
+  );
+
+  res.send("Payment Success");
+});
+
+app.post("/fail/:tran_id", async (req, res) => {
+
+  const tranId = req.params.tran_id;
+
+
+  res.send("Payment fail");
+
+
+
+});
+
+
     
 
-   // Initialize SSLCommerz
-    const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
-    sslcz.init(data).then((apiResponse) => {
+app.get('/paymentHistory/:email', async( req, res)=>{
 
 
-      if (apiResponse?.GatewayPageURL) {
-        return res.send({
-          url: apiResponse.GatewayPageURL,
-        });
-      } else {
-        return res.status(400).send({
-          message: "Payment session failed!",
-        });
-      }
-    });
+  try{
 
+    const email=req.params.email;
 
-    app.post('/success/:tran_id', async (req, res)=>{
-      
+  const query={email : email};
 
-      console.log(req.params.tran_id);
+  const result=await paymentCollection.find(query).toArray();
 
+  res.status(200).json({status:true, data:result});
 
+  }catch(err){
 
-    })
+    res.status(500).json({status:'fail', error:err})
 
-  } catch (err) {
-    console.log(err);
-    res.status(500).send({ error: err.message });
   }
-});
+
+
+  
+
+
+
+
+
+
+})
+
+
 
 app.listen(3000, () => console.log("Server running on port 3000"));
 
