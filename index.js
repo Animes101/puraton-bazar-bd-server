@@ -101,7 +101,7 @@ async function run() {
     //products relate api
 
     const PuratonBazar = client.db("PuratonBazar");
-    const products = PuratonBazar.collection("    ");
+    const products = PuratonBazar.collection("products");
 
     app.get("/products", verifyToken , async (req, res) => {
       try {
@@ -530,25 +530,42 @@ app.get('/state', async (req, res) => {
   });
 });
 
+
 app.get('/orderState', async (req, res) => {
 
   const result = await paymentCollection.aggregate([
-
-    { $unwind: '$id' },
-
+    {
+      $unwind: "$orderName"
+    },
     {
       $lookup: {
-        from: 'products',
-        localField: 'id',
-        foreignField: '_id',
-        as: 'menuItems'
+        from: "products",
+        localField: "orderName",
+        foreignField: "name",
+        as: "menuItems"
+      }
+    },
+    {
+      $unwind: "$menuItems"
+    },
+    {
+      $group: {
+        _id: "$menuItems.category",
+        quentity: { $sum: 1 },
+        totalPrice: { $sum: "$menuItems.price" }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        category: "$_id",
+        quentity: 1,
+        totalPrice: 1
       }
     }
-
   ]).toArray();
 
   res.send(result);
-
 });
 
 
