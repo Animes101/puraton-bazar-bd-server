@@ -72,16 +72,6 @@ async function run() {
     }
 
 
-
-
-
-
-
-
-
-
-
-
       //middleware for verify Admin
     const verifyAdmin= async (req, res, next)=> {
 
@@ -106,12 +96,15 @@ async function run() {
     app.get("/products", verifyToken , async (req, res) => {
       try {
         const result = await products.find().toArray();
-        res.status(200).json({ status: "ok", data: result });
+        const total_product= await products.estimatedDocumentCount();
+        res.status(200).json({ status: "ok", data: result, total_product:total_product });
       } catch (error) {
         console.error("Error fetching products:", error);
         res.status(500).json({ status: "error", message: "Server problem" });
       }
     });
+
+
      app.delete("/products/:id", verifyToken, verifyAdmin , async (req, res) => {
       try {
         const {id}=req.params;
