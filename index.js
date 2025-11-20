@@ -95,7 +95,13 @@ async function run() {
 
     app.get("/products", verifyToken , async (req, res) => {
       try {
-        const result = await products.find().toArray();
+
+        const page=parseInt(req.query.page);
+        const limit=parseInt(req.query.limit);
+
+        
+        const result = await products.find().skip(page * limit).limit(limit).toArray();
+
         const total_product= await products.estimatedDocumentCount();
         res.status(200).json({ status: "ok", data: result, total_product:total_product });
       } catch (error) {
