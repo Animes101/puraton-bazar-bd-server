@@ -93,9 +93,18 @@ async function run() {
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 10;
 
+     // OPTIONAL QUERY SETUP
+    const query = {};
+
+    if (req.query.category) {
+      query.category = req.query.category;
+    }
+
+
+
     
     const result = await products
-      .find()
+      .find(query)
       .skip(page * limit)
       .limit(limit)
       .toArray();
@@ -369,6 +378,8 @@ async function run() {
     app.post("/order", async (req, res) => {
       try {
         const order = req.body;
+
+        console.log(order)
 
         // Create unique transaction ID
         const tran_id = "TXN_" + Date.now();
