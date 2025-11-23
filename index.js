@@ -87,47 +87,52 @@ async function run() {
 
     const PuratonBazar = client.db("PuratonBazar");
     const products = PuratonBazar.collection("products");
-
-   app.get("/products", async (req, res) => {
+   app.get("/products", verifyToken, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 0;
-    const limit = parseInt(req.query.limit) || 10;
-    const category=req.query.category;
-   
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
 
+    const category = req.query.category;
+    const price = parseInt(req.query.price);
+    const search = req.query.search;
 
+    let filter = {};
 
-    //  OPTIONAL QUERY SETUP
-    const query = {};
-
-    
-    if (category && category !== 'ALL') {
-      query.category = category; // শুধু selected category filter
+    // Category filter
+    if (category && category !== "ALL") {
+      filter.category = category;
     }
 
+    // Price filter (less than or equal)
+    if (price) {
+      filter.price = { $lte: price };
+    }
+
+    // Search filter
+    if (search) {
+      filter.name = { $regex: search, $options: "i" };
+    }
+
+    console.log("Filter Applied:", filter);
 
     const result = await products
-      .find(query)
+      .find(filter)
       .skip(page * limit)
       .limit(limit)
       .toArray();
-      
 
-    const total_product = await products.countDocuments(query);
+    const total_product = await products.countDocuments(filter);
 
     res.status(200).json({
       status: "ok",
       data: result,
-      total_product: total_product,
+      total_product,
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Server problem",
-    });
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 
     app.delete("/products/:id", verifyToken, verifyAdmin, async (req, res) => {
