@@ -92,17 +92,20 @@ async function run() {
   try {
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 10;
+    const category=req.query.category;
+   
 
-     // OPTIONAL QUERY SETUP
+
+
+    //  OPTIONAL QUERY SETUP
     const query = {};
 
-    if (req.query.category) {
-      query.category = req.query.category;
+    
+    if (category && category !== 'ALL') {
+      query.category = category; // শুধু selected category filter
     }
 
 
-
-    
     const result = await products
       .find(query)
       .skip(page * limit)
@@ -110,7 +113,7 @@ async function run() {
       .toArray();
       
 
-    const total_product = await products.countDocuments();
+    const total_product = await products.countDocuments(query);
 
     res.status(200).json({
       status: "ok",
