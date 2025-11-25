@@ -87,7 +87,7 @@ async function run() {
 
     const PuratonBazar = client.db("PuratonBazar");
     const products = PuratonBazar.collection("products");
-   app.get("/products", verifyToken, async (req, res) => {
+   app.get("/products" , async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
@@ -130,6 +130,23 @@ async function run() {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// get best product
+app.get('/best-product', async (req, res) => {
+  try {
+    const query = { price: { $gte: 30000 } }; 
+
+    const result = await products.find(query).toArray();
+
+    res.status(200).json({
+      status: "ok",
+      bestProduct: result
+    });
+
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
   }
 });
 
@@ -229,8 +246,8 @@ async function run() {
     });
 
     //Cart Related api
-
-    const cartsCollection = PuratonBazar.collection("carts");
+    
+ const cartsCollection = PuratonBazar.collection("carts");
 
     app.post("/cart", async (req, res) => {
       try {
@@ -246,6 +263,7 @@ async function run() {
         res.status(500).json({ status: "error", message: "Server problem" });
       }
     });
+
 
     app.get("/cart", async (req, res) => {
       try {
@@ -267,8 +285,6 @@ async function run() {
     app.delete("/cart/:id", async (req, res) => {
       try {
         const { id } = req.params;
-
-        console.log(id);
 
         const query = { _id: new ObjectId(id) };
 
