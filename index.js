@@ -105,11 +105,14 @@ app.get("/products", async (req, res) => {
     const filter={}
 
 
-    // Category filter
-    if (category !== "ALL") {
-      filter.category = category;
-    }
+  if (category && category !== "ALL") {
+  filter.category = category;
+}
 
+
+if(search){
+  
+}
 
 
     
