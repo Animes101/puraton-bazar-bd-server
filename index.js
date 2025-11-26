@@ -87,35 +87,34 @@ async function run() {
 
     const PuratonBazar = client.db("PuratonBazar");
     const products = PuratonBazar.collection("products");
-   app.get("/products" , async (req, res) => {
+
+app.get("/products", async (req, res) => {
   try {
-    const page = parseInt(req.query.page);
-    const limit = parseInt(req.query.limit);
+    let {
+      page ,
+      limit ,
+      category ,
+      minPrice,
+      maxPrice,
+      search
+    } = req.query;
 
-    const category = req.query.category;
-    const price = parseInt(req.query.price);
-    const search = req.query.search;
+    page = parseInt(page);
+    limit = parseInt(limit);
 
-    let filter = {};
+    const filter={}
+
 
     // Category filter
-    if (category && category !== "ALL") {
+    if (category !== "ALL") {
       filter.category = category;
     }
 
-    // Price filter (less than or equal)
-    if (price) {
-      filter.price = { $lte: price };
-    }
 
-    // Search filter
-    if (search) {
-      filter.name = { $regex: search, $options: "i" };
-    }
 
-    console.log("Filter Applied:", filter);
-
-    const result = await products
+    
+    // DB Query
+    const data = await products
       .find(filter)
       .skip(page * limit)
       .limit(limit)
@@ -125,32 +124,89 @@ async function run() {
 
     res.status(200).json({
       status: "ok",
-      data: result,
+      data,
       total_product,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching products:", error);
+    res.status(500).json({ status: "error", message: "Server Problem" });
   }
 });
 
-// get best product
-app.get('/best-product', async (req, res) => {
-  try {
-    const query = { price: { $gte: 30000 } }; 
 
-    const result = await products.find(query).toArray();
+// app.get("/products", async (req, res) => {
+//   try {
+//     let {
+//       page = 0,
+//       limit = 10,
+//       category = "ALL",
+//       minPrice,
+//       maxPrice,
+//       search,
+//     } = req.query;
 
-    res.status(200).json({
-      status: "ok",
-      bestProduct: result
+//     page = parseInt(page);
+//     limit = parseInt(limit);
+
+//     // Safe parse
+//     minPrice = parseInt(minPrice);
+//     maxPrice = parseInt(maxPrice);
+
+//     if (isNaN(minPrice)) minPrice = 0;
+//     if (isNaN(maxPrice)) maxPrice = 1000000;
+
+//     const filter = {};
+
+//     // --- Search Query Logic ---
+//     if (search) {
+//       filter.name = { $regex: search, $options: "i" };
+//       // বি:দ্র: আপনার ডাটাবেসে প্রোডাক্টের নাম যদি 'name' হয়, তবে 'filter.title' এর বদলে 'filter.name' ব্যবহার করবেন।
+//     }
+
+//     // --- Category Filter ---
+//     if (category !== "ALL") {
+//       filter.category = category;
+//     }
+
+//     // --- Price Filter ---
+//     // আপনার কোডে minPrice এবং maxPrice ভেরিয়েবল ছিল কিন্তু ফিল্টারে যুক্ত ছিল না, তাই যুক্ত করে দিলাম।
+//     // filter.price = { $gte: minPrice, $lte: maxPrice };
+
+//     // DB Query
+//     const data = await products
+//       .find(filter)
+//       .skip(page * limit)
+//       .limit(limit)
+//       .toArray();
+
+//     const total_product = await products.countDocuments(filter);
+
+//     res.status(200).json({
+//       status: "ok",
+//       data,
+//       total_product,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching products:", error);
+//     res.status(500).json({ status: "error", message: "Server Problem" });
+//   }
+// });
+
+    // get best product
+    app.get("/best-product", async (req, res) => {
+      try {
+        const query = { price: { $gte: 30000 } };
+
+        const result = await products.find(query).toArray();
+
+        res.status(200).json({
+          status: "ok",
+          bestProduct: result,
+        });
+      } catch (error) {
+        res.status(500).json({ status: "error", message: error.message });
+      }
     });
-
-  } catch (error) {
-    res.status(500).json({ status: "error", message: error.message });
-  }
-});
-
-
 
     app.delete("/products/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
@@ -165,6 +221,66 @@ app.get('/best-product', async (req, res) => {
         res.status(500).json({ status: "error", message: "Server problem" });
       }
     });
+
+    // app.get("/products", async (req, res) => {
+    //   try {
+    //     let {
+    //       page = 0,
+    //       limit = 10,
+    //       category = "ALL",
+    //       minPrice = 0,
+    //       maxPrice = 1000000
+    //     } = req.query;
+
+    //     page = parseInt(page);
+    //     limit = parseInt(limit);
+    //     minPrice = parseInt(minPrice);
+    //     maxPrice = parseInt(maxPrice);
+
+    //     // ---------------------
+    //     // 1️⃣ FILTER BUILD
+    //     // ---------------------
+    //     let filter = {};
+
+    //     // Category Filter
+    //     if (category !== "ALL") {
+    //       filter.category = category;
+    //     }
+
+    //     // Price Range Filter
+    //     filter.price = {
+    //       $gte: minPrice,
+    //       $lte: maxPrice,
+    //     };
+
+    //     console.log("▶ Filter Running:", filter);
+
+    //     // ---------------------
+    //     // 2️⃣ PAGINATION + FIND
+    //     // ---------------------
+    //     const data = await products
+    //       .find(filter)
+    //       .skip(page * limit)
+    //       .limit(limit)
+    //       .toArray();
+
+    //     // ---------------------
+    //     // 3️⃣ COUNT TOTAL DOCS
+    //     // ---------------------
+    //     const total_product = await products.countDocuments(filter);
+
+    //     res.status(200).json({
+    //       status: "ok",
+    //       data,
+    //       total_product,
+    //     });
+    //   } catch (error) {
+    //     console.error("Error fetching products:", error);
+    //     res
+    //       .status(500)
+    //       .json({ status: "error", message: "Server Problem" });
+    //   }
+    // });
 
     app.get("/products/:id", async (req, res) => {
       try {
@@ -246,12 +362,24 @@ app.get('/best-product', async (req, res) => {
     });
 
     //Cart Related api
-    
- const cartsCollection = PuratonBazar.collection("carts");
+
+    const cartsCollection = PuratonBazar.collection("carts");
 
     app.post("/cart", async (req, res) => {
       try {
         const cart = req.body;
+
+        const iteId = req.query.itemId;
+
+        const query = { email: cart.email };
+        const allCarts = await cartsCollection.find(query).toArray();
+
+        if (allCarts.find((item) => item.itemId === iteId)) {
+          return res.send({
+            status: "error",
+            message: "This Product alredy Add to Cart",
+          });
+        }
 
         const result = await cartsCollection.insertOne(cart);
 
@@ -264,11 +392,9 @@ app.get('/best-product', async (req, res) => {
       }
     });
 
-
     app.get("/cart", async (req, res) => {
       try {
         const email = req.query.email;
-
         const query = { email: email };
 
         const result = await cartsCollection.find(query).toArray();
@@ -403,7 +529,7 @@ app.get('/best-product', async (req, res) => {
       try {
         const order = req.body;
 
-        console.log(order)
+        console.log(order);
 
         // Create unique transaction ID
         const tran_id = "TXN_" + Date.now();
