@@ -88,93 +88,34 @@ async function run() {
     const PuratonBazar = client.db("PuratonBazar");
     const products = PuratonBazar.collection("products");
 
-app.get("/products", async (req, res) => {
-  try {
-    let {
-      page ,
-      limit ,
-      category ,
-      minPrice,
-      maxPrice,
-      search
-    } = req.query;
-
-    page = parseInt(page);
-    limit = parseInt(limit);
-
-    const filter={}
-
-
-  if (category && category !== "ALL") {
-  filter.category = category;
-}
-
-
-if(search){
-  
-}
-
-
-    
-    // DB Query
-    const data = await products
-      .find(filter)
-      .skip(page * limit)
-      .limit(limit)
-      .toArray();
-
-    const total_product = await products.countDocuments(filter);
-
-    res.status(200).json({
-      status: "ok",
-      data,
-      total_product,
-    });
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({ status: "error", message: "Server Problem" });
-  }
-});
-
-
 // app.get("/products", async (req, res) => {
 //   try {
 //     let {
-//       page = 0,
-//       limit = 10,
-//       category = "ALL",
+//       page ,
+//       limit ,
+//       category ,
 //       minPrice,
 //       maxPrice,
-//       search,
+//       search
 //     } = req.query;
 
 //     page = parseInt(page);
 //     limit = parseInt(limit);
 
-//     // Safe parse
-//     minPrice = parseInt(minPrice);
-//     maxPrice = parseInt(maxPrice);
+//     const filter={}
 
-//     if (isNaN(minPrice)) minPrice = 0;
-//     if (isNaN(maxPrice)) maxPrice = 1000000;
 
-//     const filter = {};
+//   if (category && category !== "ALL") {
+//   filter.category = category;
+// }
 
-//     // --- Search Query Logic ---
-//     if (search) {
-//       filter.name = { $regex: search, $options: "i" };
-//       // বি:দ্র: আপনার ডাটাবেসে প্রোডাক্টের নাম যদি 'name' হয়, তবে 'filter.title' এর বদলে 'filter.name' ব্যবহার করবেন।
-//     }
 
-//     // --- Category Filter ---
-//     if (category !== "ALL") {
-//       filter.category = category;
-//     }
+// if(search){
+  
+// }
 
-//     // --- Price Filter ---
-//     // আপনার কোডে minPrice এবং maxPrice ভেরিয়েবল ছিল কিন্তু ফিল্টারে যুক্ত ছিল না, তাই যুক্ত করে দিলাম।
-//     // filter.price = { $gte: minPrice, $lte: maxPrice };
 
+    
 //     // DB Query
 //     const data = await products
 //       .find(filter)
@@ -194,6 +135,72 @@ if(search){
 //     res.status(500).json({ status: "error", message: "Server Problem" });
 //   }
 // });
+
+app.get("/products", async (req, res) => {
+  try {
+    let {
+      page,
+      limit,
+      category,
+      minPrice,
+      maxPrice,
+      search,
+    } = req.query;
+
+  
+
+    // Convert numbers only if exists
+    if (page) page = parseInt(page);
+    if (limit) limit = parseInt(limit);
+    if (minPrice) minPrice = parseInt(minPrice);
+    if (maxPrice) maxPrice = parseInt(maxPrice);
+
+    const filter = {};
+
+    // CATEGORY FILTER
+    if (category && category !== "ALL") {
+      filter.category = category;
+    }
+
+   // price filter ONLY if both exist
+    if (minPrice && maxPrice) {
+      filter.price = {
+        $gte: parseInt(minPrice),
+        $lte: parseInt(maxPrice)
+      };
+    }
+  
+   // SEARCH FILTER ONLY IF search EXISTS
+if (search && search.trim() !== "") {
+  filter.$or = [
+    { title: { $regex: search, $options: "i" } },
+    { name: { $regex: search, $options: "i" } },
+    { description: { $regex: search, $options: "i" } },
+  ];
+}
+
+console.log("Final Filter:", filter);
+
+    // DB QUERY
+    const data = await products
+      .find(filter)
+      .skip(page ? page * limit : 0)
+      .limit(limit ? limit : 10)
+      .toArray();
+
+    const total_product = await products.countDocuments(filter);
+
+    res.status(200).json({
+      status: "ok",
+      data,
+      total_product,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ status: "error", message: "Server Problem" });
+  }
+});
+
 
     // get best product
     app.get("/best-product", async (req, res) => {
