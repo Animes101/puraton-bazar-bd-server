@@ -88,54 +88,6 @@ async function run() {
     const PuratonBazar = client.db("PuratonBazar");
     const products = PuratonBazar.collection("products");
 
-// app.get("/products", async (req, res) => {
-//   try {
-//     let {
-//       page ,
-//       limit ,
-//       category ,
-//       minPrice,
-//       maxPrice,
-//       search
-//     } = req.query;
-
-//     page = parseInt(page);
-//     limit = parseInt(limit);
-
-//     const filter={}
-
-
-//   if (category && category !== "ALL") {
-//   filter.category = category;
-// }
-
-
-// if(search){
-  
-// }
-
-
-    
-//     // DB Query
-//     const data = await products
-//       .find(filter)
-//       .skip(page * limit)
-//       .limit(limit)
-//       .toArray();
-
-//     const total_product = await products.countDocuments(filter);
-
-//     res.status(200).json({
-//       status: "ok",
-//       data,
-//       total_product,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching products:", error);
-//     res.status(500).json({ status: "error", message: "Server Problem" });
-//   }
-// });
-
 app.get("/products", async (req, res) => {
   try {
     let {
@@ -179,13 +131,13 @@ if (search && search.trim() !== "") {
   ];
 }
 
-console.log("Final Filter:", filter);
-
-    // DB QUERY
+    
+console.log(filter)
+     // DB QUERY
     const data = await products
       .find(filter)
       .skip(page ? page * limit : 0)
-      .limit(limit ? limit : 10)
+      .limit(limit ? limit : 0)
       .toArray();
 
     const total_product = await products.countDocuments(filter);
