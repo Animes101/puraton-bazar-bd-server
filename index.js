@@ -131,8 +131,6 @@ if (search && search.trim() !== "") {
   ];
 }
 
-    
-console.log(filter)
      // DB QUERY
     const data = await products
       .find(filter)
@@ -154,21 +152,41 @@ console.log(filter)
 });
 
 
-    // get best product
-    app.get("/best-product", async (req, res) => {
-      try {
-        const query = { price: { $gte: 30000 } };
+   // get only best products
+app.get("/best-product", async (req, res) => {
+  try {
+    // query: শুধু যাদের isBest:true
+    const query = { isBest: true };
 
-        const result = await products.find(query).toArray();
+    const result = await products.find(query).toArray();
 
-        res.status(200).json({
-          status: "ok",
-          bestProduct: result,
-        });
-      } catch (error) {
-        res.status(500).json({ status: "error", message: error.message });
-      }
+    res.status(200).json({
+      status: "ok",
+      bestProduct: result,
     });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+// Latest Products
+app.get("/latest-products", async (req, res) => {
+  try {
+    const result = await products
+      .find({})
+      .sort({ postedAt: -1 }) // newest first
+      .limit(9)               // latest 10 product দেখাবে
+      .toArray();
+
+    res.status(200).json({
+      status: "ok",
+      latestProducts: result,
+    });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
 
     app.delete("/products/:id", verifyToken, verifyAdmin, async (req, res) => {
       try {
@@ -183,66 +201,6 @@ console.log(filter)
         res.status(500).json({ status: "error", message: "Server problem" });
       }
     });
-
-    // app.get("/products", async (req, res) => {
-    //   try {
-    //     let {
-    //       page = 0,
-    //       limit = 10,
-    //       category = "ALL",
-    //       minPrice = 0,
-    //       maxPrice = 1000000
-    //     } = req.query;
-
-    //     page = parseInt(page);
-    //     limit = parseInt(limit);
-    //     minPrice = parseInt(minPrice);
-    //     maxPrice = parseInt(maxPrice);
-
-    //     // ---------------------
-    //     // 1️⃣ FILTER BUILD
-    //     // ---------------------
-    //     let filter = {};
-
-    //     // Category Filter
-    //     if (category !== "ALL") {
-    //       filter.category = category;
-    //     }
-
-    //     // Price Range Filter
-    //     filter.price = {
-    //       $gte: minPrice,
-    //       $lte: maxPrice,
-    //     };
-
-    //     console.log("▶ Filter Running:", filter);
-
-    //     // ---------------------
-    //     // 2️⃣ PAGINATION + FIND
-    //     // ---------------------
-    //     const data = await products
-    //       .find(filter)
-    //       .skip(page * limit)
-    //       .limit(limit)
-    //       .toArray();
-
-    //     // ---------------------
-    //     // 3️⃣ COUNT TOTAL DOCS
-    //     // ---------------------
-    //     const total_product = await products.countDocuments(filter);
-
-    //     res.status(200).json({
-    //       status: "ok",
-    //       data,
-    //       total_product,
-    //     });
-    //   } catch (error) {
-    //     console.error("Error fetching products:", error);
-    //     res
-    //       .status(500)
-    //       .json({ status: "error", message: "Server Problem" });
-    //   }
-    // });
 
     app.get("/products/:id", async (req, res) => {
       try {
@@ -309,6 +267,7 @@ console.log(filter)
               newItem?.images?.[1] || null,
             ],
             postedAt: newItem.postedAt,
+            isBest:newItem.isBest
           },
         };
 
