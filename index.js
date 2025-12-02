@@ -558,6 +558,34 @@ app.get("/latest-products", async (req, res) => {
       }
     });
 
+    app.get("/payment-all", verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    let { page = 0, limit = 10 } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const skip = page * limit;
+
+    const result = await paymentCollection
+      .find()
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    const totalPayment = await paymentCollection.countDocuments();
+
+    res.status(200).json({
+      status: true,
+      data: result,
+      totalPayment,
+    });
+  } catch (err) {
+    res.status(500).json({ status: "fail", error: err });
+  }
+});
+
+
     app.get("/state", async (req, res) => {
       const users = await usersCollection.estimatedDocumentCount();
       const order = await paymentCollection.estimatedDocumentCount();
