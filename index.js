@@ -528,20 +528,21 @@ app.get("/latest-products", async (req, res) => {
     app.post("/success/:tran_id", async (req, res) => {
       const tranId = req.params.tran_id;
 
-      console.log("Payment Success:", tranId);
-
       await paymentCollection.updateOne(
         { tran_id: tranId },
         { $set: { PaidStatus: true } }
       );
 
-      res.send("Payment Success");
+       // 🔥 Redirect to frontend success page
+  res.redirect(`http://localhost:5173/payment-success?tran_id=${tranId}`);
+
+     
     });
 
     app.post("/fail/:tran_id", async (req, res) => {
       const tranId = req.params.tran_id;
 
-      res.send("Payment fail");
+      res.redirect(`http://localhost:5173/payment-fail?tran_id=${tranId}`);
     });
 
     app.get("/paymentHistory/:email", async (req, res) => {
@@ -613,6 +614,15 @@ app.patch("/payment-status/:_id", async (req, res) => {
     res.status(500).json({ status: "fail", error: err });
   }
 });
+
+app.get('/userState/:email',async (req, res)=>{
+
+  
+
+
+
+
+})
 
 
     app.get("/state", async (req, res) => {
