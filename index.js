@@ -558,6 +558,35 @@ app.get("/latest-products", async (req, res) => {
       }
     });
 
+
+
+app.patch("/payment-status/:_id", async (req, res) => {
+  try {
+    const _id = req.params._id;
+    const query = { _id: new ObjectId(_id) };
+
+    const updateDoc = {
+      $set: { successStatus: true },
+    };
+
+    const result = await paymentCollection.updateOne(query, updateDoc);
+
+    res.send({
+      success: true,
+      message: "successStatus updated to true",
+      result,
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error updating successStatus",
+      error,
+    });
+  }
+});
+
+
     app.get("/payment-all", verifyToken, verifyAdmin, async (req, res) => {
   try {
     let { page = 0, limit = 10 } = req.query;
