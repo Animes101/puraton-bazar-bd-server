@@ -587,6 +587,32 @@ app.patch("/payment-status/:_id", async (req, res) => {
   }
 });
 
+app.patch("/payment-cancel/:_id", async (req, res) => {
+  try {
+    const _id = req.params._id;
+    const query = { _id: new ObjectId(_id) };
+
+    const updateDoc = {
+      $set: { successStatus: false },
+    };
+
+    const result = await paymentCollection.updateOne(query, updateDoc);
+
+    res.send({
+      success: true,
+      message: "successStatus updated to false",
+      result,
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error updating successStatus",
+      error,
+    });
+  }
+});
+
 
     app.get("/payment-all", verifyToken, verifyAdmin, async (req, res) => {
   try {
@@ -664,6 +690,36 @@ app.patch("/payment-status/:_id", async (req, res) => {
      
       
     });
+
+    app.get('/user-state/:email', async (req, res) => {
+  try {
+    const email = req.params.email;
+    const query = { email };
+
+    // total order count
+    const totalOrder = await paymentCollection.countDocuments(query);
+
+    // total amount
+    const total_amount = await paymentCollection.aggregate([
+      { $match: { email } },
+      {
+        $group: {
+          _id: null,
+          totalSpent: { $sum: "$price" },
+        },
+      },
+    ]).toArray();
+
+    res.status(200).json({
+      totalOrder,
+      totalSpent: total_amount[0]?.totalSpent || 0, // <- BEST FIX
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+      //admin state api
 
     app.get("/state", async (req, res) => {
       const users = await usersCollection.estimatedDocumentCount();
