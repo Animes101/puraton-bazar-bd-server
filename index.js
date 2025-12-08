@@ -615,15 +615,55 @@ app.patch("/payment-status/:_id", async (req, res) => {
   }
 });
 
-app.get('/userState/:email',async (req, res)=>{
+      //dashboard state api
 
-  
+      //user order products state
 
+      app.get("/dashboard-state/:email", async (req, res) => {
+        
+      const email = req.params.email;
 
+      const result= await paymentCollection.aggregate([
+        { $match: { email: email } },
+        {
+           $unwind: "$orderName"
 
+         },
+         {
+          $lookup:{
+            from:"products",
+            localField:"orderName",
+            foreignField:"name",
+            as:"productDetails"
+          }
+         },
+         {
+          $unwind:"$productDetails"
+         },
+         {
+          $group: {
+              _id: "$productDetails.category",
+              quentity: { $sum: 1 },
+              totalPrice: { $sum: "$productDetails.price" },
+            },
+         },
+         {
+          $project:{
+            catagory:"$_id",
+            quentity:1,
+            totalPrice:1,
+            _id:0
+          }
+         }
+       
 
-})
+      ]).toArray();
 
+      res.send(result)
+      
+     
+      
+    });
 
     app.get("/state", async (req, res) => {
       const users = await usersCollection.estimatedDocumentCount();
