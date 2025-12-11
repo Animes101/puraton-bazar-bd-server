@@ -348,6 +348,7 @@ app.get("/latest-products", async (req, res) => {
 
     //Users related api
     const usersCollection = PuratonBazar.collection("users");
+
     app.post("/users", async (req, res) => {
       try {
         const userInfo = req.body;
@@ -394,11 +395,17 @@ app.get("/latest-products", async (req, res) => {
     });
 
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
+
       try {
-        const result = await usersCollection.find().toArray();
+
+        const page=parseInt(req.query.page) || 0;
+        const limit=parseInt(req.query.limit) || 10;
+        const result = await usersCollection.find().skip(page * limit).limit(limit).toArray();
+
+        const totalUsers=await usersCollection.countDocuments();
 
         if (result) {
-          res.status(200).json({ status: "ok", data: result });
+          res.status(200).json({ status: "ok", data: result, totalUsers });
         }
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -568,12 +575,18 @@ app.get("/latest-products", async (req, res) => {
     app.get("/paymentHistory/:email", async (req, res) => {
       try {
         const email = req.params.email;
+        const skipe=req.query.skip || 0;
+        const limit=req.query.limit || 10
 
         const query = { email: email };
 
-        const result = await paymentCollection.find(query).toArray();
+        const result = await paymentCollection.find(query).skip(skipe * limit).limit(limit).toArray();
 
-        res.status(200).json({ status: true, data: result });
+        const totalPayment = await paymentCollection.countDocuments(query);
+
+        console.log(totalPayment)
+
+        res.status(200).json({ status: true, data: result , totalPayment});
       } catch (err) {
         res.status(500).json({ status: "fail", error: err });
       }
@@ -661,7 +674,6 @@ app.patch("/payment-cancel/:_id", async (req, res) => {
   }
 });
 
-      //dashboard state api
 
       //user order products state
 
@@ -818,6 +830,7 @@ app.patch("/payment-cancel/:_id", async (req, res) => {
   }
 }
 run().catch(console.dir);
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
