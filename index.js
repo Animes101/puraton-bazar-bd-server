@@ -9,7 +9,10 @@ const SSLCommerzPayment = require("sslcommerz-lts");
 
 // ⬇️ Middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173','https://sparkly-chebakia-2f1476.netlify.app/'],
+  credentials: true,
+}));
 const PORT = 3000;
 
 // ⬇️ SSLCommerz Credentials
