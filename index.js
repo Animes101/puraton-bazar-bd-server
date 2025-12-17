@@ -9,11 +9,12 @@ const SSLCommerzPayment = require("sslcommerz-lts");
 
 // ⬇️ Middlewares
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: ['http://localhost:5173','https://sparkly-chebakia-2f1476.netlify.app/'],
+  origin: ['http://localhost:5173','https://sparkly-chebakia-2f1476.netlify.app'],
   credentials: true,
 }));
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT) || 3000;
 
 app.get("/", (req, res) => {
   res.send("Puraton Bazar Server is Running");
@@ -731,5 +732,5 @@ async function run() {
   }
 }
 
-// run().catch(console.dir);
+run().catch(console.dir);
 module.exports = app;
