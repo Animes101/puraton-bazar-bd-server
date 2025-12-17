@@ -15,6 +15,10 @@ app.use(cors({
 }));
 const PORT = 3000;
 
+app.get("/", (req, res) => {
+  res.send("Puraton Bazar Server is Running");
+});
+
 // ⬇️ SSLCommerz Credentials
 const store_id = "midla68ef5f2b0cf63";
 const store_passwd = "midla68ef5f2b0cf63@ssl";
