@@ -32,7 +32,7 @@ const client = new MongoClient(uri, {
 // ⬇️ Main Server Function
 async function run() {
   try {
-    await client.connect(); // MongoDB Connect
+    // await client.connect(); // MongoDB Connect
 
     /* -------------------------------------------
                 JWT Authentication
@@ -715,10 +715,11 @@ async function run() {
                 START SERVER
     ------------------------------------------- */
 
-    app.listen(3000, () => console.log("Server running on port 3000"));
+    // app.listen(3000, () => console.log("Server running on port 3000"));
 
-    await client.db("admin").command({ ping: 1 });
-    console.log("Connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Connected to MongoDB!");
+
   } finally {
   }
 }
