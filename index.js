@@ -11,7 +11,7 @@ const SSLCommerzPayment = require("sslcommerz-lts");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: ['https://puratonbazar.netlify.app', 'https://localhost:5173'],
+  origin: ['https://puratonbazar.netlify.app', 'http://localhost:5173/'],
   credentials: true,
 }));
 const PORT = parseInt(process.env.PORT) || 3000;
