@@ -11,7 +11,7 @@ const SSLCommerzPayment = require("sslcommerz-lts");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: ['http://localhost:5173','https://sparkly-chebakia-2f1476.netlify.app'],
+  origin: ['https://puratonbazar.netlify.app'],
   credentials: true,
 }));
 const PORT = parseInt(process.env.PORT) || 3000;
@@ -412,8 +412,8 @@ async function run() {
           total_amount: Number(order.price),
           currency: "BDT",
           tran_id: tran_id,
-          success_url: `http://localhost:3000/success/${tran_id}`,
-          fail_url: `http://localhost:3000/fail/${tran_id}`,
+          success_url: `https://puratonbazarserver.vercel.app/success/${tran_id}`,
+          fail_url: `https://puratonbazarserver.vercel.app/fail/${tran_id}`,
           cancel_url: "http://localhost:3030/cancel",
           ipn_url: "http://localhost:3030/ipn",
 
@@ -733,4 +733,5 @@ async function run() {
 }
 
 run().catch(console.dir);
+
 module.exports = app;
