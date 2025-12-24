@@ -489,7 +489,7 @@ async function run() {
     app.post("/fail/:tran_id", async (req, res) => {
       const tranId = req.params.tran_id;
 
-      res.redirect(`http://localhost:5173/payment-fail?tran_id=${tranId}`);
+      res.redirect(`https://puratonbazar.netlify.app/payment-fail?tran_id=${tranId}`);
     });
 
     /* -------------------------------------------
