@@ -482,7 +482,7 @@ async function run() {
       );
 
       // Redirect to React Frontend
-      res.redirect(`http://localhost:5173/payment-success?tran_id=${tranId}`);
+      res.redirect(`https://puratonbazar.netlify.app/payment-success?tran_id=${tranId}`);
     });
 
     // ⬇️ Payment Failed
